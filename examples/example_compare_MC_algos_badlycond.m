@@ -37,6 +37,14 @@ oversampling = 2.0;
 m = floor(min(oversampling*df_LR_val,d1*d2));
 %% Sample the measurement matrix Phi (pattern of revealed entries) 
 max_nr_resample = 1000;
+% Phi is a sparse matrix representing a mask of an arbitrary d1*d2 matrix,
+% where an entry is 1 if it should be included and 0 otherwise. 
+% Phi contains m 1s.
+% resample means that the sampling procedure will keep trying (up to a 
+% max of max_nr_resample times) to get r entries per row and per column.
+% Omega is a linear array of the indices of the 1s in Phi
+% On the second line this linear array gets transformed to two arrays, 
+% one for the rows and one for the columns of the non zero indices of Phi
 [Phi,Omega] = sample_phi_MatrixCompletion(d1,d2,m,'resample',r,max_nr_resample);
 [rowind,colind] = ind2sub([d1,d2],Omega);
 %% Sample the ground truth matrix X0 and measured entries y
@@ -61,59 +69,59 @@ else
     yn = y;
 end
 
-%% Choose algorithms for matrix completion
-alg_names={'MatrixIRLS','R3MC','R3MC-rankupd','R2RILS','RTRMC','LRGeomCG',...
-    'LMaFit','ScaledASD','ScaledGD','NIHT'};
-
-%%% Set optional algorithmic parameters
-opts_custom.tol = 1e-10;        % tolerance for stopping criterion
-opts_custom.N0 = 400;           % Max. number of (outer) iterations for 
-                                % 'second-order algorithms', which include 
-                                % MatrixIRLS, R2RILS and RTRMC.
-opts_custom.N0_firstorder = 1000; % Max. number of iterations for 'first-order algorithms'.
-%%% Optional parameters addressing options of 'second-order algorithms'.
-opts_custom.tol_CG_fac=1e-5*cond_nr^(-1);    % tolerance for stopping criterion of inner iterations
-opts_custom.N0_inner = 500;     % Max. number of (inner) iterations for 'second-order algorithms'
-
-
-%%% Optional parameters addressing only options for IRLS
-opts_custom.p = [0]; % (non-)convexity parameters p for IRLS
-% p = 0: sum of log objective
-% 0 < p < 1: Schatten-p quasi-norm.
-% p = 1: Nuclear norm.
-opts_custom.R = min(d1,d2);             %min(d1,d2);%floor(10*r);50;%
-opts_custom.adaptive_cg = 0;
-opts_custom.mode_linsolve = 'tangspace';    % 'rangespace'
-opts_custom.type_mean = {'optimal'};        % 'harmonic','arithmetic','geometric','min'
-opts_custom.objective = 'objective_thesis'; % 'pluseps','pluseps_squared'
-opts_custom.mode_eps = 'oracle_model_order';% 'iter_diff','auto_decay'
-opts_custom.epsmin = 1e-16;
-opts_custom.tracking = 0;
-opts_custom.lambda = 0;
-opts_custom.increase_antisymmetricweights=0;
-opts_custom.saveiterates = 1;
-opts_custom.verbose = 1;
-
-%% Run algorithms for matrix completion
-[Xr,outs,alg_names] = run_MC_algos(Phi,yn,r,alg_names,opts_custom);
-
-%% Calculating the error statistics
-calculate_partial_Frob_norms = 0; % if =1, calculate also partial Frobenius norms (restricted to Omega / Omega^c)
-verbose = 1; % provide text output after error calculations (or not if = 0)
-frob_mode = 'full';
-[error_fro_rel,error_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
-    frob_mode,verbose);
-if calculate_partial_Frob_norms
-    frob_mode = 'Phi';
-    [erPhi_fro_rel,erPhi_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
-        frob_mode,verbose);
-    frob_mode = 'Phi_comp';
-    [erPhic_fro_rel,erPhic_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
-        frob_mode,verbose);
-end
-%% Visualization of Frobenius errors of iterates of algorithms
-visualize = 1;
-if visualize == 1
-    visualize_errorcurves_combined(error_fro_rel,alg_names);
-    plot_times_errors(outs,error_fro_rel,alg_names);
-end
+% %% Choose algorithms for matrix completion
+% alg_names={'MatrixIRLS','R3MC','R3MC-rankupd','R2RILS','RTRMC','LRGeomCG',...
+%     'LMaFit','ScaledASD','ScaledGD','NIHT'};
+% 
+% %%% Set optional algorithmic parameters
+% opts_custom.tol = 1e-10;        % tolerance for stopping criterion
+% opts_custom.N0 = 400;           % Max. number of (outer) iterations for 
+%                                 % 'second-order algorithms', which include 
+%                                 % MatrixIRLS, R2RILS and RTRMC.
+% opts_custom.N0_firstorder = 1000; % Max. number of iterations for 'first-order algorithms'.
+% %%% Optional parameters addressing options of 'second-order algorithms'.
+% opts_custom.tol_CG_fac=1e-5*cond_nr^(-1);    % tolerance for stopping criterion of inner iterations
+% opts_custom.N0_inner = 500;     % Max. number of (inner) iterations for 'second-order algorithms'
+% 
+% 
+% %%% Optional parameters addressing only options for IRLS
+% opts_custom.p = [0]; % (non-)convexity parameters p for IRLS
+% % p = 0: sum of log objective
+% % 0 < p < 1: Schatten-p quasi-norm.
+% % p = 1: Nuclear norm.
+% opts_custom.R = min(d1,d2);             %min(d1,d2);%floor(10*r);50;%
+% opts_custom.adaptive_cg = 0;
+% opts_custom.mode_linsolve = 'tangspace';    % 'rangespace'
+% opts_custom.type_mean = {'optimal'};        % 'harmonic','arithmetic','geometric','min'
+% opts_custom.objective = 'objective_thesis'; % 'pluseps','pluseps_squared'
+% opts_custom.mode_eps = 'oracle_model_order';% 'iter_diff','auto_decay'
+% opts_custom.epsmin = 1e-16;
+% opts_custom.tracking = 0;
+% opts_custom.lambda = 0;
+% opts_custom.increase_antisymmetricweights=0;
+% opts_custom.saveiterates = 1;
+% opts_custom.verbose = 1;
+% 
+% %% Run algorithms for matrix completion
+% [Xr,outs,alg_names] = run_MC_algos(Phi,yn,r,alg_names,opts_custom);
+% 
+% %% Calculating the error statistics
+% calculate_partial_Frob_norms = 0; % if =1, calculate also partial Frobenius norms (restricted to Omega / Omega^c)
+% verbose = 1; % provide text output after error calculations (or not if = 0)
+% frob_mode = 'full';
+% [error_fro_rel,error_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
+%     frob_mode,verbose);
+% if calculate_partial_Frob_norms
+%     frob_mode = 'Phi';
+%     [erPhi_fro_rel,erPhi_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
+%         frob_mode,verbose);
+%     frob_mode = 'Phi_comp';
+%     [erPhic_fro_rel,erPhic_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
+%         frob_mode,verbose);
+% end
+% %% Visualization of Frobenius errors of iterates of algorithms
+% visualize = 1;
+% if visualize == 1
+%     visualize_errorcurves_combined(error_fro_rel,alg_names);
+%     plot_times_errors(outs,error_fro_rel,alg_names);
+% end
