@@ -46,7 +46,7 @@ obvservations=M(Omega);
 
 %% Run algorithm
 
-alg_names = {'ScaledASD', 'ASD'};
+alg_names = {'ScaledASD', 'ASD', 'R3MC'};
 [Xr,outs,alg_names] = run_MC_algos(A,obvservations,r,alg_names,default_params(cond_nr, m, n));
 
 %% Print frobenius info to file

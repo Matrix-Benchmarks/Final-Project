@@ -29,4 +29,4 @@ opts_custom.tracking = 0;
 opts_custom.lambda = 0;
 opts_custom.increase_antisymmetricweights=0;
 opts_custom.saveiterates = 1;
-opts_custom.verbose = 1;
+opts_custom.verbose = 0;
