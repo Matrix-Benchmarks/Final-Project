@@ -19,6 +19,8 @@
 % and the function 'run_MC_algos.m'.
 % =========================================================================
 % Author: Christian Kuemmerle, 2018-2020.
+% 
+% More comments added by Josh Engels, 2020.
 
 rng('shuffle')
 %% Set parameters
@@ -54,10 +56,15 @@ complexflag = 0;
 %%%% Set condition number:
 cond_nr = 1e6;
 %%%%%%%%%%%%%%%%%%%%%%
-[U0,V0] = sample_X0_lowrank(d1,d2,r,modeX0,complexflag,cond_nr);
+% Generate two random matrices of rank r
+% Through fancy math, makes the first singular value cond_nr and the rth
+% singular value 1, with exponential interpolation in between
+[U0,V0] = sample_X0_lowrank(d1,d2,r,modeX0,complexflag,cond_nr); 
 X0 = {U0,V0};
-% X0_full=U0*V0';
-y = partXY(U0',V0',rowind,colind,m).';
+% y is the sparse values observed by Phi. We don't need to do the whole
+% matrix multiplication U0 * V0 first because we are using clever C code
+% to only compute the parts we need.
+y = partXY(U0',V0',rowind,colind,m).'; 
 %% If desired: add noise 
 add_noise = 0;
 noise_fac = 1; % Multiplicative factor determining noise level of additive
@@ -69,59 +76,60 @@ else
     yn = y;
 end
 
-% %% Choose algorithms for matrix completion
-% alg_names={'MatrixIRLS','R3MC','R3MC-rankupd','R2RILS','RTRMC','LRGeomCG',...
-%     'LMaFit','ScaledASD','ScaledGD','NIHT'};
+%% Choose algorithms for matrix completion
+alg_names={'MatrixIRLS','R3MC','R3MC-rankupd','R2RILS','RTRMC','LRGeomCG',...
+    'LMaFit','ScaledASD','ScaledGD','NIHT'};
 % 
 % %%% Set optional algorithmic parameters
-% opts_custom.tol = 1e-10;        % tolerance for stopping criterion
-% opts_custom.N0 = 400;           % Max. number of (outer) iterations for 
-%                                 % 'second-order algorithms', which include 
-%                                 % MatrixIRLS, R2RILS and RTRMC.
-% opts_custom.N0_firstorder = 1000; % Max. number of iterations for 'first-order algorithms'.
+opts_custom.tol = 1e-10;        % tolerance for stopping criterion
+opts_custom.N0 = 400;           % Max. number of (outer) iterations for 
+                                % 'second-order algorithms', which include 
+                                % MatrixIRLS, R2RILS and RTRMC.
+opts_custom.N0_firstorder = 1000; % Max. number of iterations for 'first-order algorithms'.
+
 % %%% Optional parameters addressing options of 'second-order algorithms'.
-% opts_custom.tol_CG_fac=1e-5*cond_nr^(-1);    % tolerance for stopping criterion of inner iterations
-% opts_custom.N0_inner = 500;     % Max. number of (inner) iterations for 'second-order algorithms'
-% 
-% 
-% %%% Optional parameters addressing only options for IRLS
-% opts_custom.p = [0]; % (non-)convexity parameters p for IRLS
-% % p = 0: sum of log objective
-% % 0 < p < 1: Schatten-p quasi-norm.
-% % p = 1: Nuclear norm.
-% opts_custom.R = min(d1,d2);             %min(d1,d2);%floor(10*r);50;%
-% opts_custom.adaptive_cg = 0;
-% opts_custom.mode_linsolve = 'tangspace';    % 'rangespace'
-% opts_custom.type_mean = {'optimal'};        % 'harmonic','arithmetic','geometric','min'
-% opts_custom.objective = 'objective_thesis'; % 'pluseps','pluseps_squared'
-% opts_custom.mode_eps = 'oracle_model_order';% 'iter_diff','auto_decay'
-% opts_custom.epsmin = 1e-16;
-% opts_custom.tracking = 0;
-% opts_custom.lambda = 0;
-% opts_custom.increase_antisymmetricweights=0;
-% opts_custom.saveiterates = 1;
-% opts_custom.verbose = 1;
-% 
-% %% Run algorithms for matrix completion
-% [Xr,outs,alg_names] = run_MC_algos(Phi,yn,r,alg_names,opts_custom);
-% 
-% %% Calculating the error statistics
-% calculate_partial_Frob_norms = 0; % if =1, calculate also partial Frobenius norms (restricted to Omega / Omega^c)
-% verbose = 1; % provide text output after error calculations (or not if = 0)
-% frob_mode = 'full';
-% [error_fro_rel,error_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
-%     frob_mode,verbose);
-% if calculate_partial_Frob_norms
-%     frob_mode = 'Phi';
-%     [erPhi_fro_rel,erPhi_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
-%         frob_mode,verbose);
-%     frob_mode = 'Phi_comp';
-%     [erPhic_fro_rel,erPhic_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
-%         frob_mode,verbose);
-% end
-% %% Visualization of Frobenius errors of iterates of algorithms
-% visualize = 1;
-% if visualize == 1
-%     visualize_errorcurves_combined(error_fro_rel,alg_names);
-%     plot_times_errors(outs,error_fro_rel,alg_names);
-% end
+opts_custom.tol_CG_fac=1e-5*cond_nr^(-1);    % tolerance for stopping criterion of inner iterations
+opts_custom.N0_inner = 500;     % Max. number of (inner) iterations for 'second-order algorithms'
+
+
+%%% Optional parameters addressing only options for IRLS
+opts_custom.p = [0]; % (non-)convexity parameters p for IRLS
+% p = 0: sum of log objective
+% 0 < p < 1: Schatten-p quasi-norm.
+% p = 1: Nuclear norm.
+opts_custom.R = min(d1,d2);             %min(d1,d2);%floor(10*r);50;%
+opts_custom.adaptive_cg = 0;
+opts_custom.mode_linsolve = 'tangspace';    % 'rangespace'
+opts_custom.type_mean = {'optimal'};        % 'harmonic','arithmetic','geometric','min'
+opts_custom.objective = 'objective_thesis'; % 'pluseps','pluseps_squared'
+opts_custom.mode_eps = 'oracle_model_order';% 'iter_diff','auto_decay'
+opts_custom.epsmin = 1e-16;
+opts_custom.tracking = 0;
+opts_custom.lambda = 0;
+opts_custom.increase_antisymmetricweights=0;
+opts_custom.saveiterates = 1;
+opts_custom.verbose = 1;
+
+%% Run algorithms for matrix completion
+[Xr,outs,alg_names] = run_MC_algos(Phi,yn,r,alg_names,opts_custom);
+
+%% Calculating the error statistics
+calculate_partial_Frob_norms = 0; % if =1, calculate also partial Frobenius norms (restricted to Omega / Omega^c)
+verbose = 1; % provide text output after error calculations (or not if = 0)
+frob_mode = 'full';
+[error_fro_rel,error_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
+    frob_mode,verbose);
+if calculate_partial_Frob_norms
+    frob_mode = 'Phi';
+    [erPhi_fro_rel,erPhi_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
+        frob_mode,verbose);
+    frob_mode = 'Phi_comp';
+    [erPhic_fro_rel,erPhic_fro] = get_frob_errors(Xr,X0,Phi,alg_names,...
+        frob_mode,verbose);
+end
+%% Visualization of Frobenius errors of iterates of algorithms
+visualize = 1;
+if visualize == 1
+    visualize_errorcurves_combined(error_fro_rel,alg_names);
+    plot_times_errors(outs,error_fro_rel,alg_names);
+end
