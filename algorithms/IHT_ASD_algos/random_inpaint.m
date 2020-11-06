@@ -22,6 +22,7 @@ A = reshape(A,m,n);
 Omega = sub2ind([m n], I, J);
 data=M(Omega);
 
+
 figure(1)
 imshow(A.*M)
 drawnow

@@ -27,9 +27,9 @@ matrix_completion('ASD', m, n, p, r)
 fprintf('ASD over ...\n\n')
 
 % -------- ScaledASD ------------
-fprintf('ScaledASD starts ...\n')
-matrix_completion('ScaledASD', m, n, p, r)
-fprintf('ScaledASD over ...\n\n')
+% fprintf('ScaledASD starts ...\n')
+% matrix_completion('ScaledASD', m, n, p, r)
+% fprintf('ScaledASD over ...\n\n')
 
 % ========= image inpainting ======
 fprintf('--- random/cross inpainting ---\n')

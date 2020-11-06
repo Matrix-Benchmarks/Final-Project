@@ -7,7 +7,7 @@ M_omega = sparse(i, j, data, m, n, p);
 
 [U,S,V] = svds(M_omega, r);
 
-if strcmp(func_name,'CGIHT') || strcmp(func_name,'NIHT') 
+if strcmp(func_name,'CGIHT') || strcmp(func_name,'NIHT') || strcmp(func_name,'NIHT_Matrix') ||  strcmp(func_name,'CGIHT_Matrix')
   start.U = U;
   start.sigma = diag(S);
   start.V = V;
