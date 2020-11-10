@@ -1,4 +1,4 @@
-function [model, infos] = R3MC(data_ts, data_ls, model, params)
+function [model, infos] = R3MC(data_ts, data_ls, model, max_time)
     %[model, infos] = R3MC(data_ts, data_ls, model, params)
     %
     %
@@ -40,7 +40,14 @@ function [model, infos] = R3MC(data_ts, data_ls, model, params)
     % This implementation is due to
     % Bamdev Mishra <b.mishra@ulg.ac.be>, 2013
     
+% =========================================================================
+% Minor modifications by Josh Engels:
+% - removed all iteration limits, only time matters
+% - set sensible default parameters
+
+    
     % Set default parameters
+    params = struct;
     if ~isfield(params,'beta_type'); params.beta_type = 'P-R'; end % Other choices: 'H-S', 'F-R' and 'off'
     if ~isfield(params,'tol'); params.tol = 1e-5; end % Tolerance on absolute value
     if ~isfield(params,'vtol'); params.vtol = 1e-5; end % Tolerance on relative value
@@ -155,7 +162,8 @@ function [model, infos] = R3MC(data_ts, data_ls, model, params)
     
     infos.iter_time = toc(t_begin0) - time_ignore0;
     
-    for iter = 1:maxiter,
+    total_time = tic;
+    while toc(total_time) < max_time
         t_begin = tic; % Begin time.
         
         % Compute first step.
@@ -252,10 +260,6 @@ function [model, infos] = R3MC(data_ts, data_ls, model, params)
         
         if verb,
             fprintf('[%0.4d] Cost = %7.3e, #extra linesearch = %i, Gradient norm sq. = %7.3e, Step = %7.3e \n', iter, (2/n)*cost_new, j, ip_grad_grad_new, alpha);
-        end
-        if (2/n)*cost_new < tol || linesearch_fail || abs(cost - cost_new)/cost < tol,
-            infos.iter_time = [infos.iter_time; toc(t_begin) - time_ignore]; % Per iteration time.
-            break;
         end
         
         if strcmpi(params.beta_type, 'off') % Gradient descent

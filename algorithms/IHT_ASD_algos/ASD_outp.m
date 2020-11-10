@@ -1,4 +1,4 @@
-function [Mout, Out] = ASD(m,n,r,Omega,data,start,opts)
+function [Mout, Out] = ASD(m,n,r,Omega,data,start,max_time)
 %
 % Implementation of matrix completion algorithm Alternating Steepest
 % Descent ('ASD') of [1]. 
@@ -11,19 +11,15 @@ function [Mout, Out] = ASD(m,n,r,Omega,data,start,opts)
 % Minor modifications by Christian Kuemmerle:
 % - save intermediate iterates if opts.saveiterates == 1.
 % - save timing information.
+% =========================================================================
+% Minor modifications by Josh Engels:
+% - removed all iteration limits, only time matters
+% - set sensible default parameters
 
-reltol = opts.rel_res_tol;
-maxiter = opts.maxit;
-verbosity = opts.verbosity;
-rate_limit = 1-opts.rel_res_change_tol;
-if isfield(opts,'saveiterates') && opts.saveiterates == 1
-    saveiterates = 1;
-    Mout = cell(1,maxiter);
-else
-    saveiterates = 0;
-end
-relres = reltol * norm(data);
-
+% Set parameters
+maxiter = 1e7; % Very large number just to make sure we never reach it
+verbosity = 1;
+saveiterates = 1;
 p = length(data);
 
 % create a sparse matrix
@@ -61,7 +57,7 @@ conv_rate = 0;
 
 tic
 % iteration
-while iter <= maxiter &&  res >=  relres && conv_rate <= rate_limit
+while toc < max_time
     % gradient for X
     updateSval(diff_on_omega_matrix,diff_on_omega,p);
     grad_X = diff_on_omega_matrix*Y';

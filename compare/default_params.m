@@ -2,14 +2,15 @@
 
 function  opts_custom = default_params(cond_nr, m, n)
 
-% %%% Set optional algorithmic parameters
-opts_custom.tol = 1e-10;        % tolerance for stopping criterion
+% %%% All parameters should use a time limt
+opts_custom.time_limit_ms = 1e6;
+
+
+
+% %%% Optional parameters addressing options of 'second-order algorithms'.
 opts_custom.N0 = 400;           % Max. number of (outer) iterations for 
                                 % 'second-order algorithms', which include 
                                 % MatrixIRLS, R2RILS and RTRMC.
-opts_custom.N0_firstorder = 1000; % Max. number of iterations for 'first-order algorithms'.
-
-% %%% Optional parameters addressing options of 'second-order algorithms'.
 opts_custom.tol_CG_fac=1e-5*cond_nr^(-1);    % tolerance for stopping criterion of inner iterations
 opts_custom.N0_inner = 500;     % Max. number of (inner) iterations for 'second-order algorithms'
 
@@ -29,4 +30,4 @@ opts_custom.tracking = 0;
 opts_custom.lambda = 0;
 opts_custom.increase_antisymmetricweights=0;
 opts_custom.saveiterates = 1;
-opts_custom.verbose = 0;
+opts_custom.verbose = 1;

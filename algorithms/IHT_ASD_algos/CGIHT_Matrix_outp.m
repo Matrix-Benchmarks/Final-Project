@@ -1,4 +1,4 @@
-function [Mout, Out] = CGIHT_Matrix(m,n,r,Omega,data,start,opts)
+function [Mout, Out] = CGIHT_Matrix(m,n,r,Omega,data,start,max_time)
 %
 % Implementation of matrix completion algorithm Conjugate Gradient
 % Iterative Hard Thresholding ('CGIHT') of [1]. 
@@ -8,20 +8,13 @@ function [Mout, Out] = CGIHT_Matrix(m,n,r,Omega,data,start,opts)
 % iterative hard thresholding for compressed sensing and matrix completion. 
 % Information and Inference, 4(4):289?327, 2015.
 % =========================================================================
-% Minor modifications by Christian Kuemmerle:
-% - save intermediate iterates if opts.saveiterates == 1.
-% - save timing information.
+% Minor modifications by Josh Engels:
+% - removed all iteration limits, only time matters
+% - set sensible default parameters
 
-reltol = opts.rel_res_tol; 
-maxiter = opts.maxit;
-rate_limit = 1-opts.rel_res_change_tol;
-if isfield(opts,'saveiterates') && opts.saveiterates == 1
-    saveiterates = 1;
-    Mout=cell(1,maxiter);
-else
-    saveiterates = 0;
-end
-relres = reltol*norm(data);
+% Set parameters
+maxiter = 1e7; % Very large number just to make sure we never reach it
+saveiterates = 1;
 itres = zeros(maxiter,1);
 conv_rate = 0;
 
@@ -53,7 +46,7 @@ d = sparse(full(res_on_omega_matrix));
 Ad_proj = partXY(U',U'*d, I, J, p);
 
 % iteration
-while  ((res >= relres) && (iter <= maxiter)) % && (conv_rate < rate_limit)) 
+while  toc < max_time % && (conv_rate < rate_limit)) 
     % compute alpha
     % <UU'*r, UU'*d> = <r, UU'*d> = <r, A.*(UU'*d)>
     % since res_on_omega is sparse
@@ -105,9 +98,6 @@ while  ((res >= relres) && (iter <= maxiter)) % && (conv_rate < rate_limit))
     itres(iter) = res;
     conv_rate = (itres(iter)/itres(max(1,iter-15)))^(1/min(15,iter-1));
     time(iter) = toc;
-    if iter >= 500 && conv_rate >= rate_limit
-        break;
-    end
 end
 iter=iter-1;
 if saveiterates

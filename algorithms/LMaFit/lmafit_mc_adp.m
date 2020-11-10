@@ -1,4 +1,4 @@
-function [X,Y,Out] = lmafit_mc_adp(m,n,k,Known,data,opts)
+function [X,Y,Out] = lmafit_mc_adp(m,n,k,Known,data,max_time)
 %
 % Implementation of "Low-rank Matrix Fitting algorithm" ('LMaFit') for
 % matrix completion [1].
@@ -61,62 +61,27 @@ function [X,Y,Out] = lmafit_mc_adp(m,n,k,Known,data,opts)
 %
 %   modified by Zaiwen Wen, 12/17/2009
 %   modified by Zaiwen Wen, 09/30/2011
+%   modified by Josh Engels, 11/9/2020
 
 L = length(data);
 
 % set parameters
-tol = 1.25e-4;
-maxit = 500;
+maxit = 1e7;
 iprint = 1;
 Zfull = (L/(m*n) > 0.2 ) || k > .02*min(m,n) || m*n < 5e5;
 DoQR = true;
-est_rank = 1;
+est_rank = 0;
 rank_max =  max(floor(0.1*min(m,n)),2*k);
 rank_min =  1;
 rk_inc = 1; %max(min(5, floor(rank_max/5)),1);
 rk_jump = 10;
 init = 0;
 save_res = 0;
+recsys = 0;
+Out.Xhist=cell(1,maxit);
+Out.Yhist=cell(1,maxit);
 
-if isfield(opts,'tol');         tol     = opts.tol;        end
-if isfield(opts,'maxit');       maxit   = opts.maxit;      end
-if isfield(opts,'print');       iprint  = opts.verbose;      end
-if isfield(opts,'Zfull');       Zfull   = opts.Zfull;      end
-if isfield(opts,'DoQR');        DoQR    = opts.DoQR;       end
-if isfield(opts,'est_rank');    est_rank= opts.est_rank;   end
-if isfield(opts,'rank_max');    rank_max= opts.rank_max;   end
-if isfield(opts,'rank_min');    rank_min= opts.rank_min;   end
-if isfield(opts,'rk_inc');      rk_inc  = opts.rk_inc;     end 
-if isfield(opts,'rk_jump');     rk_jump = opts.rk_jump;    end 
-if isfield(opts,'init');        init    = opts.init;       end
-if isfield(opts,'save_res');    save_res= opts.save_res;   end
-
-if isfield(opts,'recsys') && opts.recsys == 1
-    recsys = 1;
-    if isfield(opts,'train') && isfield(opts,'test')
-    else
-        error('Please provide training and test data (recommender system application).')
-    end
-    clip_ratingscale = opts.clip_ratingscale;
-    if clip_ratingscale
-        clip_ratingscale = [min(opts.train.values), max(opts.train.values)];
-    end
-    RMSE = zeros(1,maxit);
-    RMSE_train = zeros(1,maxit);
-    MABS = zeros(1,maxit);
-    MABS_train = zeros(1,maxit);
-else
-    recsys = 0;
-end
-if isfield(opts,'saveiterates') && opts.saveiterates == 1
-    Out.Xhist=cell(1,maxit);
-    Out.Yhist=cell(1,maxit);
-end
-
-reschg_tol = 0.5*tol; rk = k;  
 if est_rank == 1; rank_max = min(rank_max, k); end 
-    
-linopts.SYM = true; linopts.POSDEF = true;
 datanrm = max(1,norm(data));    
 
 objv = zeros(maxit,1);  RR = ones(maxit,1);
@@ -127,7 +92,8 @@ end
 
 % initialize: make sure the correctness of the index set and data
 data(data==0) = eps;    data_tran = false; 
-
+rk = k;  
+if est_rank == 1; rank_max = min(rank_max, k); end 
 
 if Zfull %Z is full
     if isstruct(Known), Known = sub2ind([m n], Known.Ik,Known.Jk); end
@@ -156,18 +122,7 @@ if m>n
     end
 end
 
-if init == 0
-    X = zeros(m,k);   Y = eye(k,n);   Res = data;   res = datanrm; 
-    %X = zeros(m,k);   Y = rand(k,n);   Res = data;   res = datanrm; 
-else
-    X = opts.X;  Y = opts.Y;    opts.X = []; opts.Y = [];
-    if Zfull 
-        Z = X*Y;  Res = data - Z(Known);    Z(Known) = data;
-    else %Z = S + XY, initialize the storage of S
-        Res = data - partXY(X',Y,Ik,Jk,L);  updateSval(S, Res, L);
-    end
-    res = norm(Res);
-end
+X = zeros(m,k);   Y = eye(k,n);   Res = data;   res = datanrm; 
 
 % parameters for alf
 alf = 0;  increment = 1; %init_inc();
@@ -177,6 +132,9 @@ time=zeros(1,maxit);
 tic
 % main iteration
 for iter = 1:maxit
+    if toc > max_time
+        break
+    end
     itr_rank = itr_rank + 1; 
     Xo = X; Yo = Y; Res0 = Res; res0 = res; alf0x = alf;
     if Zfull
@@ -236,39 +194,12 @@ for iter = 1:maxit
 
     % update Z or S with the most recent alf
     if Zfull; Z(Known) = data + alf*Res; else updateSval(S, (alf+1)*Res, L); end
-    if isfield(opts,'saveiterates') && opts.saveiterates == 1
-        if m>n
-            Out.Xhist{iter}=X;
-            Out.Yhist{iter}=Y;
-        else
-            Out.Xhist{iter}=X;%Y';
-            Out.Yhist{iter}=Y;%X';
-        end
-    end
-    if recsys 
-        Yt=Y';
-        XX=X;
-        prediction_train_val_c =  get_prediction_RecSys_MatFac(XX, Yt, ...
-            eye(size(XX,2),size(Yt,2)),opts.train.rowind, opts.train.colind,...
-            opts.centscale,clip_ratingscale);
-        prediction_test_val_c =  get_prediction_RecSys_MatFac(XX, Yt, ...
-            eye(size(XX,2),size(Yt,2)),opts.test.rowind, opts.test.colind,...
-            opts.centscale,clip_ratingscale);
-        RMSE(iter) = get_RMSE(prediction_test_val_c,opts.test.values);
-        RMSE_train(iter) = get_RMSE(prediction_train_val_c,opts.train.values);
-        MABS(iter) = get_MABS(prediction_test_val_c,opts.test.values);
-        MABS_train(iter) = get_MABS(prediction_train_val_c,opts.train.values);
-        
-        
-    % check stopping
-    if ((reschg < reschg_tol && ...
-            itr_rank > minitr_reduce_rank) || relres < tol); break; end
-
-    %if ((est_rank ==1||est_rank==0) && ((reschg < reschg_tol && ...
-    %        itr_rank > minitr_reduce_rank) || relres < tol) ) ...
-    %   || ((est_rank == 2)&&( relres < tol || (k==rank_max && itr_rank >= maxit)))
-    %        break; 
-    %end
+    if m>n
+        Out.Xhist{iter}=X;
+        Out.Yhist{iter}=Y;
+    else
+        Out.Xhist{iter}=X;%Y';
+        Out.Yhist{iter}=Y;%X';
     end
 end %iter
 
@@ -282,24 +213,8 @@ Out.rank = rk;
 Out.relres = relres;
 Out.reschg = reschg;
 Out.time = time(1:iter);
-if isfield(opts,'saveiterates') && opts.saveiterates == 1
-    Out.Xhist=Out.Xhist(1:iter);
-    Out.Yhist=Out.Yhist(1:iter);
-else
-    if m>n
-        Out.Xhist=X;
-        Out.Yhist=Y;
-    else
-        Out.Xhist=X;%Y';
-        Out.Yhist=Y;%X';
-    end
-end
-if recsys
-   Out.RMSE      = RMSE(1:iter);
-   Out.RMSE_train= RMSE_train(1:iter);
-   Out.MABS      = MABS(1:iter);
-   Out.MABS_train= MABS_train(1:iter);
-end
+Out.Xhist=Out.Xhist(1:iter);
+Out.Yhist=Out.Yhist(1:iter);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function init_inc()

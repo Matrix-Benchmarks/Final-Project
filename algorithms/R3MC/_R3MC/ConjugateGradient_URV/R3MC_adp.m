@@ -1,4 +1,4 @@
-function [model, infos] = R3MC_adp(prob,params)%(data_ts, data_ls, model, params)
+function [model, infos] = R3MC_adp(prob,max_time)%(data_ts, data_ls, model, params)
     %[model, infos] = R3MC(data_ts, data_ls, model, params)
     %
     %
@@ -40,17 +40,23 @@ function [model, infos] = R3MC_adp(prob,params)%(data_ts, data_ls, model, params
     % This implementation is due to
     % Bamdev Mishra <b.mishra@ulg.ac.be>, 2013
     
+    % =========================================================================
+    % Minor modifications by Josh Engels:
+    % - removed all iteration limits, only time matters
+    % - set sensible default parameters
+    
     % Set default parameters
-    if ~isfield(params,'beta_type'); params.beta_type = 'P-R'; end % Other choices: 'H-S', 'F-R' and 'off'
+    params = struct;
+    if ~isfield(params,'beta_type'); params.beta_type = 'F-R'; end % Other choices: 'H-S', 'F-R' and 'off'
     if ~isfield(params,'tol'); params.tol = 1e-5; end % Tolerance on absolute value
     if ~isfield(params,'vtol'); params.vtol = 1e-5; end % Tolerance on relative value
     if ~isfield(params,'verbose'); params.verbose = true; end % Verbosity
     if ~isfield(params,'max_step'); params.max_step = 100; end  % Maximum step size during line-search
-    if ~isfield(params,'sigma_armijo'); params.sigma_armijo = 0.5; end % Parameter of the Armijo step
+    if ~isfield(params,'sigma_armijo'); params.sigma_armijo = 1e-4; end % Parameter of the Armijo step, keep this low if using linearized linesearch
     if ~isfield(params,'ls_maxiter'); params.ls_maxiter = 10; end % Maximum number of line-search steps
-    if ~isfield(params,'N0'); params.N0 = 500; end % Maximum number of iterations
+    if ~isfield(params,'N0'); params.N0 = 1e7; end % Maximum number of iterations, very large number
     if ~isfield(params,'linearized_linesearch'); params.linearized_linesearch = true; end % Exact linesearch or adapative
-    if ~isfield(params,'compute_predictions'); params.compute_predictions = true; end % Compute test error
+    if ~isfield(params,'compute_predictions'); params.compute_predictions = false; end % Compute test error
     if ~isfield(params,'orth_value'); params.orth_value = Inf; end % Measure orthogonality while computing conjugate direction
     if ~isfield(params,'gamma'); params.gamma = 0; end  % Regularization parameter
     if ~isfield(params,'accel_linesearch'); params.accel_linesearch = true; end % To use accelerated lineseach
@@ -73,11 +79,7 @@ function [model, infos] = R3MC_adp(prob,params)%(data_ts, data_ls, model, params
         guess_linesearch = @guess_linesearch_urv; % This linesearch makes one iteration twice costly
         warning('R3MC:linesearch', 'Going for the default full linearized linesearch. It is costly.\n')
     end
-    if isfield(params,'saveiterates') && params.saveiterates == 1
-        saveiterates = 1;
-    else
-        saveiterates = 0;
-    end
+    saveiterates = 1;
     
     % Problem dimensions
     model.r = prob.r;
@@ -173,7 +175,13 @@ function [model, infos] = R3MC_adp(prob,params)%(data_ts, data_ls, model, params
         X           = cell(1,N0);
     end
     
+    total_time = tic;
     for iter = 1:N0
+        
+        if toc(total_time) > max_time
+            break;
+        end
+        
         t_begin = tic; % Begin time.
         
         % Compute first step.
@@ -234,6 +242,9 @@ function [model, infos] = R3MC_adp(prob,params)%(data_ts, data_ls, model, params
                 linesearch_fail = 1;
                 break;
             end
+        end
+        if (linesearch_fail)
+           break; 
         end
         
         updateSparse(M, errors);
@@ -366,15 +377,8 @@ function [model, infos] = R3MC_adp(prob,params)%(data_ts, data_ls, model, params
         if saveiterates
             X{iter} = {model.U*model.R,model.V};
         end
-        if 2*cost_new < tol || linesearch_fail || abs(cost - cost_new)/cost < tol %(2/n)*cost_new < tol
-            infos.iter_time = [infos.iter_time; toc(t_begin) - time_ignore]; % Per iteration time.
-            N = iter;
-            break;
-        else
-            N = iter;
-        end
+        N = iter;
         cost = cost_new;
-
     end
     
     model = model_new;
