@@ -38,10 +38,11 @@ obvservations=M(Omega);
 
 %% Run algorithm
 
-% Work: "R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix"
-% TODO: LRGeomCG, MatrixIRLS, other IRLS?, ScaledGD, other Reimann ones?
-alg_names = ["LMaFit", "R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix"];
-[Xr,outs] = run_test(A,obvservations,r,alg_names,60);
+% Work: "R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix",
+% "ScaledGD"
+% TODO: LRGeomCG, MatrixIRLS, other IRLS?, other Reimann ones?
+alg_names = ["ScaledGD"];
+[Xr,outs] = run_test(A,obvservations,r,alg_names,30);
 
 %% Print frobenius info to file
 output_file = fopen('output/lena.txt','w');

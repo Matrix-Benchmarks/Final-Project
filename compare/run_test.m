@@ -63,5 +63,13 @@ for alg_num = 1:nr_algos
         end
     end
     
+    if strcmp(current_alg,'ScaledGD')
+        input.d1 = d1;
+        input.d2 = d2;
+        [input.rowind,input.colind]=find(Phi);
+        [input.Omega] = find(Phi);
+        input.y = y;
+        [Xr{alg_num},outs{alg_num}] = ScaledGD(input, r, max_time);
+    end
     
 end

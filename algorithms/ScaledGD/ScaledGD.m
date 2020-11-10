@@ -1,4 +1,4 @@
-function [Xr,outs] = ScaledGD(prob,opts,r)
+function [Xr,outs] = ScaledGD(prob,r, max_time)
 %
 % Implementation of Scaled Gradient Descent ('ScaledGD') for
 % matrix completion [1].
@@ -15,6 +15,10 @@ function [Xr,outs] = ScaledGD(prob,opts,r)
 % - save timing information.
 % - increase normalization factor 'p' by a factor of 1.5 each time the
 % algorithmic iterates diverge for a given p.
+% =========================================================================
+% Minor modifications by Josh Engels:
+% - removed all iteration limits, only time matters
+% - set sensible default parameters
 
 d1=prob.d1;
 d2=prob.d2;
@@ -22,21 +26,11 @@ d2=prob.d2;
 %    error('Not implemented yet.') 
 % end
 m = length(prob.Omega);
-T = opts.T; % number of gradient steps
- 
-if isfield(opts,'saveiterates') && opts.saveiterates == 1
-    saveiterates = 1;
-    Xouts = cell(1,T);
-else
-    saveiterates = 0;
-end
-if isfield(opts,'scaledgd_normalization')
-    p = opts.scaledgd_normalization;
-else
-    p = m/(d1*d2); % normalization parameter
-end
-T = opts.T; % number of gradient steps
-eta = opts.eta; % step size parameter
+T = 1e7; % Large enough to run for the time 
+saveiterates = 1;
+Xouts = cell(1,T);
+p = m/(d1*d2); % normalization parameter
+eta = 0.5; % step size parameter
 
 %% Initialization
 % U_seed = sign(rand(d1,r)-0.5);
@@ -50,6 +44,8 @@ eta = opts.eta; % step size parameter
 
 p_good = 0;
 p=p/1.5;
+
+start = tic;
 while p_good == 0
     p_good = 1;
     p=p*1.5;
@@ -81,15 +77,15 @@ while p_good == 0
         L_plus = L - eta*Z*R/(R'*R + eps('double')*eye(r));
         R_plus = R - eta*Z'*L/(L'*L + eps('double')*eye(r));
         
+
         if norm(L_plus)>2*norm(L) || norm(R_plus)>2*norm(R)
             %norm_fac_L=norm(L_plus)/norm(L);
             %norm_fac_R=norm(R_plus)/norm(R);
             p_good = 0;
-            if opts.verbose > 0
-                disp('Update p factor...')
-            end
+            disp('Update p factor...')
             break;
         end
+        
         L = L_plus;
         R = R_plus;
         X_vec = partXY(L',R',prob.rowind,prob.colind,m);
@@ -98,11 +94,8 @@ while p_good == 0
             Xouts{t} = {L,R};
         end
         time(t) = toc;
-        if t > 1 
-            rel_dist = norm(X_vec-prob.y.',2)/norm_X0Omega;
-            if rel_dist < opts.tol
-                break;
-            end
+        if toc(start) > max_time
+            break
         end
     end
 end
