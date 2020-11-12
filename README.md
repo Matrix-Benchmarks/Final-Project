@@ -1,7 +1,7 @@
 
 # Low Rank Matrix Completion Benchmarks
 
-This repository contains a collection of low rank matrix completion algorithms, a framework to test those algorithms on many different datasets, and a website for displaying those results. This repository was originally forked from the [the MatrixIRLS repo](https://github.com/ckuemmerle/MatrixIRLS), a repository the authors of [Escaping Saddle Points in Ill-Conditioned Matrix Completion with a Scalable Second Order Method](https://arxiv.org/pdf/2009.02905.pdf) wrote to test their algorithm against other low rank matrix completion algorithms.
+This repository contains a collection of low rank matrix completion algorithms, a framework to test those algorithms on many different datasets, and a website for displaying those results, partially inspired by what [ann-benchmarks](https://github.com/erikbern/ann-benchmarks) does for near neighbour search. This repository was originally forked from the [the MatrixIRLS repo](https://github.com/ckuemmerle/MatrixIRLS), a repository the authors of [Escaping Saddle Points in Ill-Conditioned Matrix Completion with a Scalable Second Order Method](https://arxiv.org/pdf/2009.02905.pdf) wrote to test their algorithm against other low rank matrix completion algorithms.
 
 ## Run instructions
 * Open MATLAB and run `setup` or, alternatively, add subfolders manually to path. Then run some or all of the tests in the compare folder, and then run the python file compare.py in the output folder to generate the graphs. This will also allow local generation of the website using the generated plots.
