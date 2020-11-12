@@ -1,50 +1,18 @@
 
-# MatrixIRLS
-*Matrix Iteratively Reweighted Least Squares* (`MatrixIRLS`) for low-rank matrix completion.
+# Low Rank Matrix Completion Benchmarks
 
-This repository contains a MATLAB implementation of the algorithm  `MatrixIRLS` described in the paper [Escaping Saddle Points in Ill-Conditioned Matrix Completion with a Scalable Second Order Method](https://drive.google.com/file/d/1s-ivhFNLEMe_tSgqUNd-oHD5HCEPiyMF/view) presented at the [ICML 2020 Workshop: _"Beyond First Order Methods in ML Systems"_](https://sites.google.com/view/optml-icml2020/home).
+This repository contains a collection of low rank matrix completion algorithms, a framework to test those algorithms on many different datasets, and a website for displaying those results. This repository was originally forked from the [the MatrixIRLS repo](https://github.com/ckuemmerle/MatrixIRLS), a repository the authors of [Escaping Saddle Points in Ill-Conditioned Matrix Completion with a Scalable Second Order Method](https://arxiv.org/pdf/2009.02905.pdf) wrote to test their algorithm against other low rank matrix completion algorithms.
 
-`MatrixIRLS`, as presented in the [paper above]((https://drive.google.com/file/d/1s-ivhFNLEMe_tSgqUNd-oHD5HCEPiyMF/view)),  minimizes the sum of logarithms of the singular values of a matrix subject to a entry-wise data constraint, using Iteratively Reweighted Least Squares (IRLS) steps based on an _optimal weight operator_ combined with a suitable smoothing strategy for the objective.
+## Run instructions
+* Open MATLAB and run `setup` or, alternatively, add subfolders manually to path. Then run some or all of the tests in the compare folder, and then run the python file compare.py in the output folder to generate the graphs. This will also allow local generation of the website using the generated plots.
 
-The implementation uses an adaptation of `bksvd` or [Block Krylov Singular Value Decompostion](https://github.com/cpmusco/bksvd) by Cameron Musco and Christopher Musco to compute singular values and vectors of matrices in a "low-rank + sparse" format. 
-
-The repository contains also a collection of **_reference algorithms_ for low-rank matrix completion**, see list below. In the experimental section of the [paper]((https://drive.google.com/file/d/1s-ivhFNLEMe_tSgqUNd-oHD5HCEPiyMF/view) ), `MatrixIRLS` is compared to these algorithms in terms of _data-efficiency_ (performance for few provided entries) and _scalability_. We provide the implementations of the reference algorithms for the user's convenience in the folder. These implementations all contain only minor modifications of the authors' original code (to allow for timing experiments). Please refer to the respective research papers and original implementations for a description of standard parameter choices.
-
-## Citation
-If you refer to the paper or the code, please cite it as:
-```
-@inproceedings{kuemmerleverdun2020,
-  title={Escaping Saddle Points in Ill-Conditioned Matrix Completion with a Scalable Second Order Method},
-  author={K{\"u}mmerle, Christian and Verdun, Claudio M.},
-  booktitle={Workshop on Beyond First Order Methods in ML Systems at the $37^{th}$ International Conference on Machine Learning},
-  year={2020}
-}
-```
-## Installation
-* Open MATLAB and run `setup_MatrixIRLS` or, alternatively, add subfolders manually to path. 
-
-The main implementation can be found in the folder `algorithms/MatrixIRLS`, reference algorithms can be found in subfolders of `algorithms`. Some of the algorithms use methods for sparse access of factorized matrices implemented in C compiled as `.mex` files, and other auxiliary files contained in the `tools` folder.
-## Examples and Usage
-* `demo_MatrixIRLS`: This is a minimal example of how to use the main implementation  `MatrixIRLS.m`.
-
-In the folder `examples/`, you find the following example scripts:
-* `example_compare_MC_algos_badlycond`:
-Compares several algorihms for low-rank matrix completion for the completion of badly conditioned matrix with condition number $\kappa=:\frac{\sigma_1(\textbf{X}_0)}{\sigma_r(\textbf{X}_0)} = 10^6$.  For this instance, it calculates reconstructions of the algorithms, and visualizes the error decay, both per iteration and with respect to algorithmic runtime.
-* `example_compare_MC_algos_wellcond`:
-As above, but with a well-conditioned matrix with $\kappa = 2$.
-* `example_compare_HMIRLS`: 
-Compares `MatrixIRLS` with `HM-IRLS` of [[KS18]](http://www.jmlr.org/beta/papers/v19/17-244.html) for a medium-size problem. The algorithm of  [[KS18]](http://www.jmlr.org/beta/papers/v19/17-244.html) is somewhat similar, but `MatrixIRLS` exhibits improved scalability by orders of magnitude.
-* `example_compare_IRLS_various`: 
-Compares the iteratively reweighted least squares algorithms `MatrixIRLS`, a similar fast implementation of IRLS
-with suboptimal weight operator `'arithmetic'`, the algorithm `HM-IRLS` of [[KS18]](http://www.jmlr.org/beta/papers/v19/17-244.html), and the algorithm `IRLS-col` of [[FRW11]](https://epubs.siam.org/doi/abs/10.1137/100811404) based on column reweighting.
-* `example_compare_MatrixIRLS_IRucLq_sIRLS`:
-Compares `MatrixIRLS` with the IRLS variants `IRLS-p` and `sIRLS-p` of [[MF12]](http://www.jmlr.org/beta/papers/v13/mohan12a.html) and `IRucLq` and `tIRucLq` of [[LXY13]](https://epubs.siam.org/doi/abs/10.1137/110840364) (the latter solves an *unconstrained* formulation, minimizing a rank suggorate + data fit term). Illustrates advantage of `MatrixIRLS` in terms of speed and accuracy.
-
-In the folder `ICML2020/`, you find the scripts reproducing the experiments of our [ICML Workshop paper](https://sites.google.com/view/optml-icml2020/home).
+The algorithms tested can be found in subfolders of `algorithms`. Some of the algorithms use methods for sparse access of factorized matrices implemented in C compiled as `.mex` files, and other auxiliary files contained in the `tools` folder.
 
 ## List of algorithms
-We gratefully acknowledge the authors of the following matrix completion algorithms. For re-use of the algorithms the subfolders of `algorithms/` with the exception of `MatrixIRLS`, please refer to the provided links and contact the authors if the respective terms of usage are unclear.
+We gratefully acknowledge the authors of the following matrix completion algorithms. For re-use of the algorithms, please refer to the provided links and contact the authors if the respective terms of usage are unclear.
 
+* 'MatrixILRS' (_Matrix Iteratively Reweighted Least Squares_) by Christian Kümmerle and Claudio M. Verdun [[KV20]](https://arxiv.org/pdf/2009.02905.pdf),
+[available](https://github.com/ckuemmerle/MatrixIRLS) as the parent github repository.
 * `ASD` (_Alternating Steepest Descent_) and `ScaledASD` (_Scaled Alternating Steepest Descent_) by Jared Tanner and Ke Wei [[TW16]](https://doi.org/10.1016/j.acha.2015.08.003), [available](http://www.sdspeople.fudan.edu.cn/weike/code/mc20140528.tar) at [Ke Wei's website](http://www.sdspeople.fudan.edu.cn/weike/publications.html).
 * `NIHT` (_Normalized Iterative Hard Thresholding_ [[TW12]](https://doi.org/10.1137/120876459)) and `CGIHT` (_Conjugate Gradient Iterative Hard Thresholding_ [[BTW15]](https://doi.org/10.1093/imaiai/iav011)) by Jeffrey Blanchard, Jared Tanner and Ke Wei, [available](http://www.sdspeople.fudan.edu.cn/weike/code/mc20140528.tar) at [Ke Wei's website](http://www.sdspeople.fudan.edu.cn/weike/publications.html).
 * `LMaFit` (Low-rank Matrix Fitting algorithm [[WYZ12]](https://doi.org/10.1007/s12532-012-0044-1)) by Zaiwen Wen, Wotao Yin, and Yin Zhang, available [here](http://lmafit.blogs.rice.edu).
@@ -60,14 +28,16 @@ We gratefully acknowledge the authors of the following matrix completion algorit
 * `ScaledGD` (Scaled Gradient Descent [[TMC20]](https://arxiv.org/abs/2005.08898)) by Tian Tong, Cong Ma and Yuejie Chi. Available [here](https://github.com/Titan-Tong/ScaledGD).
 
 ## About this repository
-##### Main developer: 
-* Christian Kümmerle (<kuemmerle@jhu.edu>)
-##### Contributors:
-* Claudio M. Verdun (<claudio.verdun@tum.de>)
-
-If you have any problems or questions, please contact us for example via e-mail.
+##### Rice Comp 414 Final Project: 
+* Joshua Engels
+* Richard Morse
+##### Authors of original MatrixICLR repository:
+* Christian Kümmerle 
+* Claudio M. Verdun
 
 ## References
+ -  [[KV20]](https://arxiv.org/pdf/2009.02905.pdf) Christian Kümmerle and Claudio M. Verdun, [**Escaping Saddle Points in Ill-Conditioned Matrix Completion with a Scalable Second Order Method**](https://arxiv.org/pdf/2009.02905.pdf)'MatrixILRS' (_Matrix Iteratively Reweighted Least Squares_) by Christian Kümmerle and Claudio M. Verdun [[KV20]](https://arxiv.org/pdf/2009.02905.pdf), _arXiv preprint_, arXiv:2009.02905, 2020.
+[available](https://github.com/ckuemmerle/MatrixIRLS) as the parent github repository
  - [[KS18]](http://www.jmlr.org/beta/papers/v19/17-244.html) Christian Kümmerle and Juliane Sigl, [**Harmonic Mean Iteratively Reweighted Least Squares for Low-Rank Matrix Recovery**](http://www.jmlr.org/beta/papers/v19/17-244.html). _J. Mach. Learn. Res._, 19(47):1–49, 2018.
 - [[FRW11]](https://epubs.siam.org/doi/abs/10.1137/100811404) Massimo Fornasier, Holger Rauhut and Rachel Ward, [**Low-rank matrix recovery via iteratively reweighted least squares minimization**](https://epubs.siam.org/doi/abs/10.1137/100811404). _SIAM J. Optim._, 21(4):1614–1640, 2011.
 - [[MF12]](http://www.jmlr.org/beta/papers/v13/mohan12a.html) Karthik Mohan and Maryam Fazel, [**Iterative reweighted algorithms for matrix rank minimization**](http://www.jmlr.org/beta/papers/v13/mohan12a.html), _J. Mach. Learn. Res._, 13 (1):3441–3473, 2012.
