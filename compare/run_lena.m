@@ -39,10 +39,10 @@ obvservations=M(Omega);
 %% Run algorithm
 
 % Work: "R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix",
-% "ScaledGD"
-% TODO: LRGeomCG, MatrixIRLS, other IRLS?, other Reimann ones?
-alg_names = ["ScaledGD"];
-[Xr,outs] = run_test(A,obvservations,r,alg_names,30);
+% "ScaledGD", "LMaFit"
+% TODO: MatrixIRLS, AFGD, LRSVRG
+alg_names = ["MatrixIRLS"];
+[Xr,outs] = run_test(A,obvservations,r,alg_names,5);
 
 %% Print frobenius info to file
 output_file = fopen('output/lena.txt','w');
@@ -53,6 +53,7 @@ for algo_num = 1:size(Xr, 2)
         try
             matrix_iterate =  current{1} * transpose(current{2});
         catch
+            disp(current)
             % Get dense matrix from sparse representation
             matrix_iterate = get_densemat_from_compact(current, A); 
             disp(norm(matrix_iterate - M, 'fro'));

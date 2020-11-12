@@ -1,5 +1,5 @@
 function [Xr,outs] = ...
-    MatrixIRLS(prob,lambda,opts)
+    MatrixIRLS(prob,lambda,opts, max_time)
 % Given partial observations of a matrix, attempts to find a low-rank completion.
 %
 % Implements the algorithm Matrix Iteratively Reweighted Least Squares
@@ -169,6 +169,9 @@ function [Xr,outs] = ...
 % Author: Christian Kuemmerle, Johns Hopkins University, kuemmerle@jhu.edu,
 % 2019-2020.
 % =========================================================================
+% Minor modifications by Josh Engels:
+% - removed all iteration limits, only time matters
+
 %% Obtain algorithmic options
 [r_upper,N0,N0_inner,p,tol_CG_fac,tol_outer,objective,...
     type_mean,qmean_para,mode_linsolve,mode_eps,epsmin,use_min,...
@@ -192,10 +195,8 @@ end
 eps             = zeros(1,N0);
 r_greatereps    = zeros(1,N0);
 time            = zeros(1,N0);
-if saveiterates
-    X           = cell(1,N0);
-    sings       = cell(1,N0);
-end
+X           = cell(1,N0);
+sings       = cell(1,N0);
 if verbose > 1
     N_inner = zeros(1,N0);
     resvec  = cell(1,N0);
@@ -258,7 +259,7 @@ end
 k=1;
 first_iterate = 1;
 tic
-while k <= N0
+while toc < max_time
     %% Calculate the solution of the minimization problem
     if mod(k,25) == 0 
         disp(['Begin Iteration ',num2str(k),'...']);
@@ -382,11 +383,9 @@ while k <= N0
     eps(k)=eps_c;
     r_greatereps(k)=r_c;
     time(k) = toc;
-    if saveiterates
-        %% Save all iterates
-        X{k}    = X_c;
-        sings{k}= weight_op_previous.sing;
-    end
+    %% Save all iterates
+    X{k}    = X_c;
+    sings{k}= weight_op_previous.sing;
     if verbose > 1
         N_inner(k) = N_inner_c;
         resvec{k}  = resvec_c;
@@ -448,12 +447,8 @@ while k <= N0
 end
 %% Tidy up the size of the relevant output arrays and cells
 Xr      = X_c;
-if saveiterates
-    outs.X      = X(1:N0);
-    outs.sings  = sings(1,1:N0);
-else
-    outs.sings  = weight_op_previous.sing;
-end
+outs.X      = X(1:N0);
+outs.sings  = sings(1,1:N0);
 outs.N      = N0;
 outs.eps    = eps(1:N0);
 outs.r_greatereps   = r_greatereps(1:N0);
@@ -766,11 +761,7 @@ use_min    = opts.use_min; % == 1: In the epsilon choice, use the minimum
                            %        of the previous one and the one calculated
                            %        by the rule.
                            % == 0: Use the one calculated by the epsilon rule.
-if isfield(opts,'saveiterates') && opts.saveiterates == 1
-    saveiterates = 1;
-else
-    saveiterates = 0;
-end
+saveiterates = 1;
 
 if isfield(opts,'recsys') && opts.recsys == 1
     recsys = 1;

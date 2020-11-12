@@ -1,5 +1,5 @@
 data = {}
-with open("lena.txt") as f:
+with open("test.txt") as f:
         while (True):
                 line = f.readline()
                 if (line == ""):
@@ -21,5 +21,5 @@ for algo_name, iterations in data.items():
 plt.legend(handles=for_legend)
 plt.ylabel("Frobenius distance (log)")
 plt.xlabel("Time in seconds")
-plt.title("Log Frobenius Error by Time on Image of Lena")
+plt.title("Log Frobenius Error by Time on Random Matrix")
 plt.show()

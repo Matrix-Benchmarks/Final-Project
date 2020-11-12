@@ -1,8 +1,7 @@
 function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time)
 % This function runs different algorithms (indicated by alg_name)
 % for a given matrix completion problem with entry mask Phi and provided 
-% data y. By default, there is a time limit of 100 seconds applied to 
-% each algorithm as its stopping condition
+% data y up to a max time.
 % =========================================================================
 % Parameters
 % ----------
@@ -70,6 +69,20 @@ for alg_num = 1:nr_algos
         [input.Omega] = find(Phi);
         input.y = y;
         [Xr{alg_num},outs{alg_num}] = ScaledGD(input, r, max_time);
+    end
+    
+    if strcmp(current_alg, 'MatrixIRLS')        
+        opts = getDefaultOpts_IRLS;
+        input.d1     = d1;
+        input.d2     = d2;
+        input.r      = r;
+        input.Phi    = Phi;
+        input.y      = y;
+        [~,outs{alg_num}] = MatrixIRLS(input,0, opts, max_time);
+        Xr{alg_num} = cell(1,outs{alg_num}.N);
+        for kk=1:outs{alg_num}.N 
+            Xr{alg_num}{kk}=outs{alg_num}.X{kk};
+        end
     end
     
 end
