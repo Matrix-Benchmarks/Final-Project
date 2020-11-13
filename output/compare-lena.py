@@ -1,5 +1,5 @@
 data = {}
-with open("test.txt") as f:
+with open("lena.txt") as f:
         while (True):
                 line = f.readline()
                 if (line == ""):

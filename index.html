@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Benchmarks</title>
+    <meta name="description" content="A Benchmarking Site for Different Low Rank Matrix Completion Algorithms">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons/css/academicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-network.min.css">
+   
+    <script>
+        var current_percent = -1;
+        var current_rank = -1;
+        var current_size = -1;
+
+        function update_image() {
+            if (current_percent != -1 && current_rank != -1 && current_size != -1) {
+                image_location = "output/Matrix_" + current_size + "_" + current_rank + "_" + current_percent + ".png";
+                document.matrix_compare.src = image_location
+                document.matrix_compare.style.display = "inline-block";
+                document.getElementById("information_theory_warning").style.visibility = "hidden";
+            }
+        }
+
+        function show_warning() {
+            document.getElementById("information_theory_warning").style.visibility = "visible";  
+            document.matrix_compare.style.display = "none";         
+        }
+
+        function percent(p) {
+            current_percent = p;
+            update_image();
+        }
+
+        function update_size(s) {
+            current_size = s;
+            update_image();
+        }
+
+        function rank(r) {
+            current_rank = r;
+            update_image();
+        }
+
+    </script>
+
+
+</head>
+<body>
+    <header>
+        <h1>Low Rank Matrix Completion Benchmarks</h1>
+    </header>
+
+    <p> This project compares low rank matrix completion algorithms on many 
+            different kinds of random matrices. The data and plots are generated
+            by code in <a href="hhttps://github.com/Matrix-Benchmarks/Final-Project/">this repository</a> 
+            (this repo also contains the source of this website). 
+            Below, feel free to experiment around with different matrix parameters to
+            compare performance. More parameter options to come soon!
+    </p>
+    <h3>Select a random matrix for comparison</h3>
+    <p style="float: left; width: 33.33%;">
+        <label>Size of (Square) Matrix</label><br>
+        <label>
+            <input type="radio" name="Size" value="2000", onclick="update_size(2000);">
+            2000
+        </label>
+    </p>
+    <p style="float: left; width: 33.33%;">
+        <label>Rank of Matrix</label><br>
+        <label>
+            <input type="radio" name="Rank" value="2", onclick="rank(2);">
+                2
+        </label>
+        <label>
+                <input type="radio" name="Rank" value="20", onclick="rank(20);">
+                20
+        </label>
+        <label>
+                <input type="radio" name="Rank" value="200", onclick="rank(200);">
+                200
+        </label>
+    </p>
+    <p style="float: left; width: 33.33%;">
+        <label>Percent of Matrix Shown</label><br>
+        <label>
+            <input type="radio" name="Percent" value="10", onclick="percent(10);">
+                10%
+        </label>
+        <label>
+                <input type="radio" name="Percent" value="20", onclick="percent(20);">
+                20%
+        </label>
+        <label>
+                <input type="radio" name="Percent" value="40", onclick="percent(40);">
+                40%
+        </label>
+    </p>
+    <img src="output\Matrix_2000_2_10.png" name="matrix_compare", style="display: none;", onerror="show_warning();" />
+    <p style="visibility: hidden", id="information_theory_warning"> 
+        This combination of values is actually below the information theoretic 
+        limit for low rank matrix recovery! See <a href="https://arxiv.org/abs/1504.04970">this paper</a>
+        for more information, but basically we require the following condition: <br>
+        matrix_size^2 * fraction_shown > (2 * matrix_size - rank) * rank) 
+    </p>
+   
+</body>
+</html>
