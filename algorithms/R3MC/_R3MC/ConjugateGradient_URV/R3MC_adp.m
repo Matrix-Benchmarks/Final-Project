@@ -178,10 +178,6 @@ function [model, infos] = R3MC_adp(prob,max_time)%(data_ts, data_ls, model, para
     total_time = tic;
     for iter = 1:N0
         
-        if toc(total_time) > max_time
-            break;
-        end
-        
         t_begin = tic; % Begin time.
         
         % Compute first step.
@@ -237,14 +233,9 @@ function [model, infos] = R3MC_adp(prob,max_time)%(data_ts, data_ls, model, para
             cost_new = 0.5*(errors'*errors) + 0.5*gamma*norm(model_new.R,'fro')^2;
             armijo = (cost - cost_new) >= sigma_armijo * abs(alpha * ip_grad_dir);
             
-            if j > ls_maxiter,
-                fprintf('*** Linesearch failed. Quitting...\n');
-                linesearch_fail = 1;
+            if toc(total_time) > max_time
                 break;
             end
-        end
-        if (linesearch_fail)
-           break; 
         end
         
         updateSparse(M, errors);
@@ -379,6 +370,10 @@ function [model, infos] = R3MC_adp(prob,max_time)%(data_ts, data_ls, model, para
         end
         N = iter;
         cost = cost_new;
+          
+        if toc(total_time) > max_time
+            break;
+        end
     end
     
     model = model_new;
