@@ -1,4 +1,4 @@
-function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time)
+function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time, output_file, goal_matrix)
 % This function runs different algorithms (indicated by alg_name)
 % for a given matrix completion problem with entry mask Phi and provided 
 % data y up to a max time.
@@ -24,15 +24,13 @@ function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time)
 Omega = find(Phi);
 nr_algos = length(alg_names);
 
-outs  = cell(1,nr_algos);
-Xr    = cell(1,nr_algos);
 for alg_num = 1:nr_algos
     current_alg = alg_names{alg_num};
     
     if (any(strcmp(["ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix"], current_alg)))
         alg_func = str2func(current_alg + "_outp");
         start = make_start_x_IHT_ASD(current_alg,d1,d2,r,Omega,y);
-        [Xr{alg_num},outs{alg_num}] = alg_func(d1,d2,r,Omega,y,start,max_time);
+        [iterations,times] = alg_func(d1,d2,r,Omega,y,start,max_time);
     end
     
     if(current_alg == "R3MC") 
@@ -48,17 +46,17 @@ for alg_num = 1:nr_algos
         input.data_ls.entries = input.y;
         input.data_ls.nentries = length(input.y);
         input = initialize_R3MC(input,false);
-        [~, outs{alg_num}] = R3MC_adp(input, max_time);
-        Xr{alg_num} = outs{alg_num}.X;
+        [~, times] = R3MC_adp(input, max_time);
+        iterations = times.X;
     end
     
     if strcmp(current_alg,'LMaFit')
         [~,~,Out] = lmafit_mc_adp(d1,d2,r,Omega,y, max_time);
-        outs{alg_num}=Out;
-        outs{alg_num}.N=Out.iter;
-        Xr{alg_num} = cell(1,outs{alg_num}.N);
-        for kk=1:outs{alg_num}.N
-            Xr{alg_num}{kk}={Out.Xhist{kk},Out.Yhist{kk}'};
+        times=Out;
+        times.N=Out.iter;
+        iterations = cell(1,times.N);
+        for kk=1:times.N
+            iterations{kk}={Out.Xhist{kk},Out.Yhist{kk}'};
         end
     end
     
@@ -68,7 +66,7 @@ for alg_num = 1:nr_algos
         [input.rowind,input.colind]=find(Phi);
         [input.Omega] = find(Phi);
         input.y = y;
-        [Xr{alg_num},outs{alg_num}] = ScaledGD(input, r, max_time);
+        [iterations,times] = ScaledGD(input, r, max_time);
     end
     
     if strcmp(current_alg, 'MatrixIRLS')        
@@ -78,11 +76,13 @@ for alg_num = 1:nr_algos
         input.r      = r;
         input.Phi    = Phi;
         input.y      = y;
-        [~,outs{alg_num}] = MatrixIRLS(input,0, opts, max_time);
-        Xr{alg_num} = cell(1,outs{alg_num}.N);
-        for kk=1:outs{alg_num}.N 
-            Xr{alg_num}{kk}=outs{alg_num}.X{kk};
+        [~,times] = MatrixIRLS(input,0, opts, max_time);
+        iterations = cell(1,times.N);
+        for kk=1:times.N 
+            iterations{kk}=times.X{kk};
         end
     end
+    
+    print_result_to_file(current_alg, times, iterations, output_file, goal_matrix);
     
 end

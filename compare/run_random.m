@@ -4,19 +4,13 @@
 % TODO: Noise?
 % This function prints algo_name, iteration number, time, frob distance to
 % the file pointer output_file for each algo and iteration
-function run_random(rank, matrix_size, fraction_shown, output_file, max_time)
+function run_random(rank, matrix_size, fraction_shown, condition_number, output_file, max_time)
     
 
     %% Setup random matrix 
-    goal_matrix = randn(matrix_size);
-    [U, S, V] = svds(goal_matrix, rank);
-    goal_matrix = U * S * V';
+    goal_matrix = generate_random_matrix("LOG", matrix_size, rank, condition_number);
+    fprintf("Matrix built, rank %i, fraction shown %f, condition_number %f, %i max_time\n", rank, fraction_shown, condition_number, max_time)
 
-    
-    % Generate condition number, needed for some algos
-    singular_vals = find(goal_matrix);
-    cond_nr = singular_vals(rank) / singular_vals(1);
-    
     num_observations = round(fraction_shown*matrix_size*matrix_size);
     
     % At first, the mask contains num_observations 1s followed by size * size - num_observations zeros
@@ -36,29 +30,8 @@ function run_random(rank, matrix_size, fraction_shown, output_file, max_time)
     
 
     %% Run matrix through algorithms
+    disp("Running algos")
     alg_names = ["R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix", "ScaledGD", "LMaFit"];
-    [iteration_info, time_info] = run_test(mask, obvservations, rank, alg_names, max_time);
+    run_test(mask, obvservations, rank, alg_names, max_time, output_file, goal_matrix);
         
-    %% Print frobenius info to file
-    for algo_num = 1:size(iteration_info, 2)
-        for iterate = 1:size(iteration_info{algo_num}, 2)
-            current = iteration_info{algo_num}{iterate};
-            time = time_info{algo_num}.time(iterate);
-            try
-                matrix_iterate =  current{1} * transpose(current{2});
-            catch
-%                 disp(current)
-                % Get dense matrix from sparse representation
-                matrix_iterate = get_densemat_from_compact(current, A); 
-                disp(norm(matrix_iterate - goal_matrix, 'fro'));
-            end
-
-            try
-                split_name = split(alg_names{algo_num});
-                fprintf(output_file, "%s %i %d %d\n", split_name{1}, iterate, time(1), norm(matrix_iterate - goal_matrix, 'fro'));
-            catch
-%                 fprintf("Printing to file failed for algorithm number %i iteration %i\n", algo_num, iterate)
-            end
-        end
-    end
 end

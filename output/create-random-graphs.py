@@ -7,7 +7,7 @@ with open("test.txt") as f:
                 if (line == ""):
                         break
                 if (line.startswith("Parameters")):
-                        _, matrix_size, rank, percent_shown = line.split(" ")
+                        _, matrix_size, rank, percent_shown, cond_num = line.split(" ")
                         line = f.readline()
                         data = {}
                         while (line != "" and not line.startswith("Parameters")):
