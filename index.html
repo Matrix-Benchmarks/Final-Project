@@ -15,10 +15,11 @@
         var current_percent = -1;
         var current_rank = -1;
         var current_size = -1;
+        var current_condition = -1;
 
         function update_image() {
-            if (current_percent != -1 && current_rank != -1 && current_size != -1) {
-                image_location = "output/Matrix_" + current_size + "_" + current_rank + "_" + current_percent + ".png";
+            if (current_percent != -1 && current_rank != -1 && current_size != -1 && current_condition != -1) {
+                image_location = "output/Matrix_" + current_size + "_" + current_rank + "_" + current_percent + "_" + current_condition + ".png";
                 document.matrix_compare.src = image_location
                 document.matrix_compare.style.display = "inline-block";
                 document.getElementById("information_theory_warning").style.visibility = "hidden";
@@ -44,6 +45,11 @@
             current_rank = r;
             update_image();
         }
+    
+        function condition(c) {
+            current_condition = c;
+            update_image();
+        }
 
     </script>
 
@@ -62,14 +68,18 @@
             compare performance. More parameter options to come soon!
     </p>
     <h3>Select a random matrix for comparison</h3>
-    <p style="float: left; width: 33.33%;">
+    <p style="float: left; width: 40%;">
         <label>Size of (Square) Matrix</label><br>
         <label>
-            <input type="radio" name="Size" value="2000", onclick="update_size(2000);">
-            2000
+            <input type="radio" name="Size" value="1000", onclick="update_size(1000);">
+            1000
+        </label>
+        <label>
+            <input type="radio" name="Size" value="10000", onclick="update_size(10000);">
+            10000
         </label>
     </p>
-    <p style="float: left; width: 33.33%;">
+    <p style="float: left; width: 60%;">
         <label>Rank of Matrix</label><br>
         <label>
             <input type="radio" name="Rank" value="2", onclick="rank(2);">
@@ -84,8 +94,13 @@
                 200
         </label>
     </p>
-    <p style="float: left; width: 33.33%;">
+    <br>
+    <p style="float: left; width: 40%;">
         <label>Percent of Matrix Shown</label><br>
+        <label>
+            <input type="radio" name="Percent" value="5", onclick="percent(5);">
+                5%
+        </label>
         <label>
             <input type="radio" name="Percent" value="10", onclick="percent(10);">
                 10%
@@ -99,7 +114,22 @@
                 40%
         </label>
     </p>
-    <img src="output\Matrix_2000_2_10.png" name="matrix_compare", style="display: none;", onerror="show_warning();" />
+    <p style="float: left; width: 60%;">
+        <label>Condition Number</label><br>
+        <label>
+            <input type="radio" name="Condition" value="5", onclick="condition(2);">
+                2
+        </label>
+        <label>
+            <input type="radio" name="Condition" value="10", onclick="condition(200);">
+                200
+        </label>
+        <label>
+                <input type="radio" name="Condition" value="20", onclick="condition(20000);">
+                20000
+        </label>
+    </p>
+    <img src="output\Matrix_1000_2_10_2.png" name="matrix_compare", style="display: none;", onerror="show_warning();" />
     <p style="visibility: hidden", id="information_theory_warning"> 
         This combination of values is actually below the information theoretic 
         limit for low rank matrix recovery! See <a href="https://arxiv.org/abs/1504.04970",  target="_blank">this paper</a>

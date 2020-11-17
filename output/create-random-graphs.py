@@ -12,17 +12,20 @@ with open("test.txt") as f:
                         data = {}
                         while (line != "" and not line.startswith("Parameters")):
                                 algo_name, iteration, time, fro_dist = line.split(" ")
-                                iteration = int(iteration)
-                                time = float(time)
-                                fro_dist = float(fro_dist)
-                                if algo_name not in data:
-                                        data[algo_name] = []
-                                data[algo_name].append((iteration, time, fro_dist))
+                                if float(time) < 60:
+                                        iteration = int(iteration)
+                                        time = float(time)
+                                        fro_dist = float(fro_dist)
+                                        if algo_name not in data:
+                                                data[algo_name] = []
+                                        data[algo_name].append((iteration, time, fro_dist))
                                 line = f.readline()
                         
                         for algo_name in data.keys():
                                 last = data[algo_name][-1]
                                 data[algo_name].append((last[0] + 1, 60, last[2]))
+                                first = data[algo_name][0]
+                                data[algo_name].insert(0, (first[0] - 1, 0, first[2]))
 
                         for_legend = []
                         for algo_name, iterations in data.items(): 
