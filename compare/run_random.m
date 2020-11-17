@@ -9,16 +9,17 @@ function run_random(rank, matrix_size, fraction_shown, condition_number, output_
 
     %% Setup random matrix 
     goal_matrix = generate_random_matrix("LOG", matrix_size, rank, condition_number);
-    fprintf("Matrix built, rank %i, fraction shown %f, condition_number %f, %i max_time\n", rank, fraction_shown, condition_number, max_time)
+    fprintf("Matrix built, rank %i, fraction shown %f, condition_number %i, %i max_time\n", rank, fraction_shown, condition_number, max_time)
 
     num_observations = round(fraction_shown*matrix_size*matrix_size);
-    
     % At first, the mask contains num_observations 1s followed by size * size - num_observations zeros
     % Then the mask gets randomly shuffled, and finally turned into a size * size array
     mask = zeros(matrix_size*matrix_size,1);
-    mask(1:num_observations) = ones(num_observations,1);
-    [~,ind] = sort(randn(matrix_size*matrix_size,1));
-    mask = mask(ind);
+    fprintf("Mask Made\n")
+    one_positions =  randperm(matrix_size * matrix_size, num_observations);
+    fprintf("Positions generated\n")
+    mask(one_positions) = 1;
+    fprintf("Mask Done\n")
     mask = reshape(mask,matrix_size,matrix_size);
     
     % Generate rows and column indices (I and J), turn them into linear indices
@@ -28,7 +29,6 @@ function run_random(rank, matrix_size, fraction_shown, condition_number, output_
     Omega = sub2ind([matrix_size matrix_size], I, J);
     obvservations = goal_matrix(Omega);
     
-
     %% Run matrix through algorithms
     disp("Running algos")
     alg_names = ["R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix", "ScaledGD", "LMaFit"];
