@@ -12,17 +12,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-network.min.css">
    
     <script>
+        var current_state = -1
+
         var current_percent = -1;
         var current_rank = -1;
         var current_size = -1;
         var current_condition = -1;
 
+        var current_file_name = ""
+
         function update_image() {
-            if (current_percent != -1 && current_rank != -1 && current_size != -1 && current_condition != -1) {
+            if (current_state == 0 && current_percent != -1 && current_rank != -1 && current_size != -1 && current_condition != -1) {
                 image_location = "output/Matrix_" + current_size + "_" + current_rank + "_" + current_percent + "_" + current_condition + ".png";
                 document.matrix_compare.src = image_location
                 document.matrix_compare.style.display = "inline-block";
                 document.getElementById("information_theory_warning").style.visibility = "hidden";
+            }
+            else if (current_state == 1 && current_file_name != "") {
+                document.matrix_compare.src = current_file_name
+                document.matrix_compare.style.display = "inline-block";
+                document.getElementById("information_theory_warning").style.visibility = "hidden";                
+            } else {
+                document.matrix_compare.style.display = "none";
             }
         }
 
@@ -51,24 +62,87 @@
             update_image();
         }
 
+        function file_name(d) {
+            current_file_name = d;
+            update_image();
+        }
+
+        function hideAll() {
+            var divsToHide = document.getElementsByClassName("random"); //divsToHide is an array
+            for(var i = 0; i < divsToHide.length; i++){
+                divsToHide[i].style.display = "none"; // depending on what you're doing
+            }
+
+            divsToHide = document.getElementsByClassName("real"); //divsToHide is an array
+            for(var i = 0; i < divsToHide.length; i++){
+                divsToHide[i].style.display = "none"; // depending on what you're doing
+            }
+
+            update_image();
+        }
+
+        function switch_to_real() {
+            var divsToHide = document.getElementsByClassName("random"); //divsToHide is an array
+            for(var i = 0; i < divsToHide.length; i++){
+                divsToHide[i].style.display = "none"; // depending on what you're doing
+            }
+            var divsToShow = document.getElementsByClassName("real"); //divsToHide is an array
+            for(var i = 0; i < divsToShow.length; i++){
+                divsToShow[i].style.display = "inline"; // or
+            }
+            
+            current_state = 1;
+            update_image();
+        }
+
+        function switch_to_random() {
+            var divsToHide = document.getElementsByClassName("real"); //divsToHide is an array
+            for(var i = 0; i < divsToHide.length; i++){
+                divsToHide[i].style.display = "none"; // depending on what you're doing
+            }
+
+            var divsToShow = document.getElementsByClassName("random"); //divsToHide is an array
+            for(var i = 0; i < divsToShow.length; i++){
+                divsToShow[i].style.display = "inline"; // or
+            }
+            document.getElementById("information_theory_warning").style.visibility = "hidden";
+
+            current_state = 0;
+            update_image();
+        }
+
     </script>
 
 
 </head>
-<body>
+<body onload="hideAll()">
     <header>
         <h1>Low Rank Matrix Completion Benchmarks</h1>
     </header>
 
     <p> This project compares low rank matrix completion algorithms on many 
-            different kinds of random matrices. The data and plots are generated
+            different kinds of random and real data matrices. The data and plots are generated
             by code in <a href="https://github.com/Matrix-Benchmarks/Low-Rank-Completion",  target="_blank">this repository</a> 
             (this repo also contains the source of this website). 
-            Below, feel free to experiment around with different matrix parameters to
-            compare performance. More parameter options to come soon!
+            Below, feel free to examine algorithm performance on either random or 
+            real data matrices. More options to come soon!
     </p>
-    <h3>Select a random matrix for comparison</h3>
-    <p style="float: left; width: 40%;">
+    
+
+
+    <h3>Select a matrix for comparison</h3>
+    <p>
+        <label>Type of Matrix</label><br>
+        <label>
+            <input type="radio" name="Type", onclick="switch_to_random();">
+            Random Data
+        </label>
+        <label>
+            <input type="radio" name="Type", onclick="switch_to_real();">
+            Real World Data
+        </label>
+    </p>
+    <p style="float: left; width: 40%;" class="random">
         <label>Size of (Square) Matrix</label><br>
         <label>
             <input type="radio" name="Size" value="1000", onclick="update_size(1000);">
@@ -79,7 +153,7 @@
             10000
         </label>
     </p>
-    <p style="float: left; width: 60%;">
+    <p style="float: left; width: 60%;" class="random">
         <label>Rank of Matrix</label><br>
         <label>
             <input type="radio" name="Rank" value="2", onclick="rank(2);">
@@ -94,8 +168,7 @@
                 200
         </label>
     </p>
-    <br>
-    <p style="float: left; width: 40%;">
+    <p style="float: left; width: 40%;" class="random">
         <label>Percent of Matrix Shown</label><br>
         <label>
             <input type="radio" name="Percent" value="5", onclick="percent(5);">
@@ -114,7 +187,7 @@
                 40%
         </label>
     </p>
-    <p style="float: left; width: 60%;">
+    <p style="float: left; width: 60%;" class="random">
         <label>Condition Number</label><br>
         <label>
             <input type="radio" name="Condition" value="5", onclick="condition(2);">
@@ -129,8 +202,20 @@
                 20000
         </label>
     </p>
-    <img src="output\Matrix_1000_2_10_2.png" name="matrix_compare", style="display: none;", onerror="show_warning();" />
-    <p style="visibility: hidden", id="information_theory_warning"> 
+    <p class="real">
+        <label>Dataset</label><br>
+        <label>
+            <input type="radio" name="Dataset", onclick="file_name('output/Matrix_Lena.png');">
+                Lena
+        </label>
+        <label>
+            <input type="radio" name="Dataset", onclick="file_name('output/Matrix_Movie_Lens.png');">
+                Movie Lens
+        </label>
+    </p>
+    <br>
+    <img name="matrix_compare", style="display: none;", onerror="show_warning();" />
+    <p style="visibility: hidden", id="information_theory_warning", class="random"> 
         This combination of values is actually below the information theoretic 
         limit for low rank matrix recovery! See <a href="https://arxiv.org/abs/1504.04970",  target="_blank">this paper</a>
         for more information. Per that result we require the following condition: <br>

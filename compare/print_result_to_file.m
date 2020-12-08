@@ -1,4 +1,4 @@
-function print_result_to_file(algo_name, time_info, iteration_info, output_file, goal_matrix) 
+function print_result_to_file(algo_name, time_info, iteration_info, output_file, goal_matrix, filter) 
     for iterate = 1:size(iteration_info, 2)
         current = iteration_info{iterate};
         time = time_info.time(iterate);
@@ -18,7 +18,7 @@ function print_result_to_file(algo_name, time_info, iteration_info, output_file,
         try
             matrix_iterate =  current{1} * transpose(current{2});
             split_name = split(algo_name);
-            fprintf(output_file, "%s %i %d %d\n", split_name{1}, iterate, time(1), norm(matrix_iterate - goal_matrix, 'fro'));
+            fprintf(output_file, "%s %i %d %d\n", split_name{1}, iterate, time(1), norm(dot(matrix_iterate, filter) - dot(goal_matrix, filter), 'fro'));
         catch
                   
                 fprintf("Printing to file failed for algorithm name %s iteration %i\n", algo_name, iterate)

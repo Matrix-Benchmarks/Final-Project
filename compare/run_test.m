@@ -1,4 +1,4 @@
-function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time, output_file, goal_matrix)
+function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time, output_file, goal_matrix, filter)
 % This function runs different algorithms (indicated by alg_name)
 % for a given matrix completion problem with entry mask Phi and provided 
 % data y up to a max time.
@@ -83,6 +83,6 @@ for alg_num = 1:nr_algos
         end
     end
     
-    print_result_to_file(current_alg, times, iterations, output_file, goal_matrix);
+    print_result_to_file(current_alg, times, iterations, output_file, goal_matrix, filter);
     
 end
