@@ -56,5 +56,5 @@ observations=M(Omega);
 max_time = 60;
 output_file = fopen('output/movielens2.txt', 'w');
 alg_names = ["R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix", "ScaledGD", "LMaFit"];
-run_test(A, observations, r, alg_names, max_time, output_file, M, filter);
+run_test(A, observations, r, alg_names, max_time, output_file, M, filter, sparse(A));
 fclose(output_file);

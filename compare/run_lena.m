@@ -32,8 +32,8 @@ Omega = sub2ind([m n], I, J);
 obvservations=M(Omega);
 
 %% Run algorithm
-max_time = 60;
-output_file = fopen('output/lena.txt', 'w');
-alg_names = ["R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix", "ScaledGD", "LMaFit"];
-run_test(A, obvservations, r, alg_names, max_time, output_file, M, ones(size(M)));
+max_time = 10;
+output_file = fopen('output/test.txt', 'w');
+alg_names = ["ASD", "MatrixIRLS"];
+run_test(A, obvservations, r, alg_names, max_time, output_file, M, ones(size(M)), sparse(A));
 fclose(output_file);
