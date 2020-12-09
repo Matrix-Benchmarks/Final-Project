@@ -22,6 +22,7 @@ function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time, output_file, goal_mat
 
 [d1,d2]=size(Phi);
 Omega = find(Phi);
+[I, J] = ind2sub([d1 d2],Omega);
 nr_algos = length(alg_names);
 
 for alg_num = 1:nr_algos
@@ -81,6 +82,25 @@ for alg_num = 1:nr_algos
         for kk=1:times.N 
             iterations{kk}=times.X{kk};
         end
+    end
+    
+    if (any(strcmp(["FGD", "AGD", "AFGD"], current_alg)))
+        alg_func = str2func("MS_" + current_alg);
+        [start,~] = initialization_ms(y,r,d1,d2,Omega);
+        num_observations = length(y);
+        
+        At_id = @(z) sparse(I,J,z,d1,d2,num_observations);
+        f_grad = @(x) (-1)*At_id(y - x(Omega));
+        
+        X_star = At_id(y);
+        sig = svds(X_star,r); sigma1 = sig(1);
+        eta = 0.2/sigma1;
+        gamma = 0.2^2/eta;
+        
+        T=10000;
+        TS = 70;
+        
+        [iterations,times] = alg_func(start,f_grad,eta,gamma,T,TS,max_time);
     end
     
     print_result_to_file(current_alg, times, iterations, output_file, goal_matrix, filter);
