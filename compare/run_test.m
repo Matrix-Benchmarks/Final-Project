@@ -103,6 +103,6 @@ for alg_num = 1:nr_algos
         [iterations,times] = alg_func(start,f_grad,eta,gamma,T,TS,max_time);
     end
     
-    print_result_to_file(current_alg, times, iterations, output_file, goal_matrix, filter);
+    print_result_to_file(current_alg, times, iterations, output_file, goal_matrix, filter, omega);
     
 end

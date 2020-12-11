@@ -54,7 +54,7 @@ observations=M(Omega);
 
 %% Run algos
 max_time = 60;
-output_file = fopen('output/movielens2.txt', 'w');
-alg_names = ["R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix", "ScaledGD", "LMaFit"];
+output_file = fopen('output/results/movielens.txt', 'a');
+alg_names = ["MatrixIRLS"];
 run_test(A, observations, r, alg_names, max_time, output_file, M, filter, sparse(A));
 fclose(output_file);

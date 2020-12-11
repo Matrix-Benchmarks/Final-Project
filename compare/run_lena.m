@@ -32,8 +32,8 @@ Omega = sub2ind([m n], I, J);
 obvservations=M(Omega);
 
 %% Run algorithm
-max_time = 10;
-output_file = fopen('output/test.txt', 'w');
-alg_names = ["ASD", "MatrixIRLS"];
+max_time = 60;
+output_file = fopen('output/results/lena.txt', 'a');
+alg_names = ["MatrixIRLS"];
 run_test(A, obvservations, r, alg_names, max_time, output_file, M, ones(size(M)), sparse(A));
 fclose(output_file);

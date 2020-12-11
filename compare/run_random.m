@@ -31,7 +31,7 @@ function run_random(rank, matrix_size, fraction_shown, condition_number, output_
     
     %% Run matrix through algorithms
     disp("Running algos")
-    alg_names = ["MatrixIRLS"];
+    alg_names = ["R3MC", "ScaledASD", "ASD", "NIHT_Matrix", "CGIHT_Matrix", "ScaledGD", "LMaFit", "MatrixIRLS"];
     run_test(mask, obvservations, rank, alg_names, max_time, output_file, goal_matrix, ones(size(goal_matrix)), sparse(mask));
         
 end

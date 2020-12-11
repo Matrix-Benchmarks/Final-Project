@@ -1,4 +1,4 @@
-files = ["movielens2.txt", "lena.txt"]
+files = ["results/movielens.txt", "results/lena.txt"]
 names = ["Movie Lens", "Lena"]
 for i, file in enumerate(files):
         data = {}
