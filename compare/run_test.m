@@ -1,4 +1,4 @@
-function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time, output_file, goal_matrix, filter, omega)
+function [Xr,outs] = run_test(Phi,y,r,alg_names, max_time, output_file, goal_matrix, filter)
 % This function runs different algorithms (indicated by alg_name)
 % for a given matrix completion problem with entry mask Phi and provided 
 % data y up to a max time.
@@ -89,20 +89,39 @@ for alg_num = 1:nr_algos
         [start,~] = initialization_ms(y,r,d1,d2,Omega);
         num_observations = length(y);
         
-        At_id = @(z) sparse(I,J,z,d1,d2,num_observations);
+        At_id = @(z) full(sparse(I,J,z,d1,d2,num_observations));
         f_grad = @(x) (-1)*At_id(y - x(Omega));
         
-        X_star = At_id(y);
-        sig = svds(X_star,r); sigma1 = sig(1);
-        eta = 0.2/sigma1;
-        gamma = 0.2^2/eta;
+        [~,Sigma1,~] = svds(goal_matrix,r); Sigma1 = diag(Sigma1); sigma1 = Sigma1(1);
+        eta = 1;%0.2/sigma1;
+        gamma = 1;%(0.1^2)/eta;
         
         T=10000;
         TS = 70;
         
-        [iterations,times] = alg_func(start,f_grad,eta,gamma,T,TS,max_time);
+        [iterations,times,dist] = alg_func(start,goal_matrix,f_grad,eta,gamma,T,TS,max_time);
+        disp(dist(end))
     end
     
-    print_result_to_file(current_alg, times, iterations, output_file, goal_matrix, filter, omega);
+    if strcmp(current_alg, 'MatrixALPS')
+        params.maxtime = max_time;       % Max time for algorithm to run
+        params.ALPSiters = 500;         % Maximum number of iterations
+        params.tol = 5e-12;             % Convergence tolerance (not used)
+        params.xpath = 1;               % Keep history log
+        params.svdMode = 'propack';     % SVD method - default mode for Matrix ALPS II - other options: 'svds', 'svd'
+        params.cg_tol = 1e-10;          % Conjugate gradients tolerance
+        params.cg_maxiter = 500;        % Maximum number of conjugate gradient iterations
+        params.svdApprox = 0;           % Set to 1 for column subset selection - really slow...
+        params.power = 2;               % Number of iterations in subspace range finder
+        
+        A = @(z) z(Omega);
+        At = @(z) full(sparse(I, J, z, d1, d2));
+        
+        %Only ALPS I & II integrated so far (neither QR variation has been
+        %implemented)
+        [~,times,iterations] = matrixALPSII(y, A, At, d1, d2, r, params, goal_matrix);
+    end
+    
+    print_result_to_file(current_alg, times, iterations, output_file, goal_matrix, filter);
     
 end
